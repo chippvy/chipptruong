@@ -200,10 +200,10 @@
         let startTime = performance.now();
 
         async function loadVyImage() {
-            const possibleNames = [
-                'vy.jpg', 'Vy.jpg', 'VY.jpg', 'vy.JPG', 'Vy.JPG',
-                'vy.jpeg', 'Vy.jpeg', 'VY.jpeg', 'vy.png', 'Vy.png'
-            ];
+    const sources = [
+        'vy.jpg',  // local
+        'https://raw.githubusercontent.com/minhphat214/chipp-animation/main/vy.jpg'  // GitHub
+    ];
             
             let loaded = false;
             for (const fileName of possibleNames) {
@@ -400,4 +400,5 @@
         });
     </script>
 </body>
+
 </html>
