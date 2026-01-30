@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chipp Trương (Vy)</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            height: 100vh;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<script>
+// ============== SETTINGS ==============
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let width, height;
+function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+const numbers = ['1', '2', '3'];
+let currentIndex = 0;
+let particles = [];       // hạt bay tự do (nổ khi đổi số)
+let textParticles = [];   // hạt tạo thành chữ
+
+const colors = [
+    '#ff00cc', '#00ffff', '#ffff00', '#33ff33', '#ff3366',
+    '#9933ff', '#ff6600', '#00ff99', '#ff99cc', '#66ffff'
+];
+
+// Biến để theo dõi đã chuyển trang chưa
+let hasRedirected = false;
+
+// Particle bay tự do (hiệu ứng nổ)
+class Particle {
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.size = Math.random() * 3 + 1.5;
+        this.vx = (Math.random() - 0.5) * 2;
+        this.vy = (Math.random() - 0.5) * 2 - 1.5; // bay lên
+        this.alpha = 1;
+        this.life = 0;
+        this.maxLife = 100 + Math.random() * 80;
+    }
+
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.02; // gravity nhẹ
+        this.alpha = 1 - (this.life / this.maxLife);
+        this.life++;
+    }
+
+    draw() {
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// Tạo hạt từ hình chữ
+function createTextParticles(text) {
+    textParticles = [];
+    ctx.font = 'bold 420px Arial'; // kích thước to, điều chỉnh nếu cần
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Vẽ chữ tạm để lấy dữ liệu pixel
+    const offscreen = document.createElement('canvas');
+    offscreen.width = width;
+    offscreen.height = height;
+    const offCtx = offscreen.getContext('2d');
+    offCtx.font = ctx.font;
+    offCtx.textAlign = 'center';
+    offCtx.textBaseline = 'middle';
+    offCtx.fillStyle = '#fff';
+    offCtx.fillText(text, width/2, height/2);
+
+    const imageData = offCtx.getImageData(0, 0, width, height).data;
+
+    // Lấy các điểm pixel trắng để tạo hạt
+    for (let y = 0; y < height; y += 3) {  // bước 3 để dày đặc hơn
+        for (let x = 0; x < width; x += 3) {
+            const i = (y * width + x) * 4;
+            if (imageData[i + 3] > 100) { // có độ trong suốt
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                textParticles.push({
+                    baseX: x,
+                    baseY: y,
+                    x: x,
+                    y: y,
+                    color: color,
+                    size: Math.random() * 2.8 + 1.2,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+        }
+    }
+}
+
+// Animation loop
+function animate() {
+    ctx.fillStyle = 'rgba(0,0,0,0.07)'; // trail mờ để hạt lấp lánh đẹp
+    ctx.fillRect(0, 0, width, height);
+
+    // Vẽ & update hạt bay tự do
+    particles.forEach((p, i) => {
+        p.update();
+        p.draw();
+        if (p.life > p.maxLife) particles.splice(i, 1);
+    });
+
+    // Vẽ hạt chữ (lấp lánh tại chỗ)
+    textParticles.forEach(p => {
+        // Nhấp nháy nhẹ
+        const brightness = 0.75 + Math.sin(Date.now() * 0.003 + p.phase) * 0.25;
+        ctx.globalAlpha = brightness;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    requestAnimationFrame(animate);
+}
+
+// Chuyển sang số tiếp theo (chỉ 1 lần)
+function nextNumber() {
+    if (currentIndex >= 2) {
+        // Đã đến số 3, sau 1.5 giây thì chuyển sang firework.html
+        setTimeout(() => {
+            if (!hasRedirected) {
+                hasRedirected = true;
+                console.log('Đang chuyển sang firework.html...');
+                window.location.href = 'firework.html';
+            }
+        }, 1500);
+        return;
+    }
+
+    currentIndex++;
+    createTextParticles(numbers[currentIndex]);
+
+    // Nổ hạt khi đổi số
+    for (let i = 0; i < 140; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1.5 + Math.random() * 4;
+        const p = new Particle(width/2, height/2, colors[Math.floor(Math.random()*colors.length)]);
+        p.vx = Math.cos(angle) * speed;
+        p.vy = Math.sin(angle) * speed - 4; // bay lên mạnh
+        p.maxLife = 80 + Math.random() * 120;
+        particles.push(p);
+    }
+}
+
+// Hàm để kiểm tra và chuyển trang
+function redirectToFirework() {
+    if (!hasRedirected) {
+        hasRedirected = true;
+        console.log('Đã đến số 3, chuyển sang firework.html');
+        window.location.href = 'firework.html';
+    }
+}
+
+// Khởi động
+createTextParticles('1');
+animate();
+
+// Đổi số theo thứ tự một lần duy nhất
+setTimeout(() => {
+    console.log('Chuyển sang số 2');
+    nextNumber();
+}, 1500);   // 1 → 2 sau 1.5s
+
+setTimeout(() => {
+    console.log('Chuyển sang số 3');
+    nextNumber();
+}, 3500);   // 2 → 3 sau 3.5s (tổng 2s cho số 2)
+
+// Thêm một timeout dự phòng để chuyển trang sau 6 giây tổng
+setTimeout(() => {
+    if (!hasRedirected) {
+        console.log('Timeout dự phòng: Chuyển sang firework.html');
+        window.location.href = '2026.html';
+    }
+}, 6000);
+
+</script>
+</body>
+</html>

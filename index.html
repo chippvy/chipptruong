@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chipp Trương (Vy)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #000000;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+        
+        .nut-bam {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        
+        .nut-bam:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+        }
+        
+        .nut-bam:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <button class="nut-bam" id="nutBam">Bấm vào đây đi</button>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const nutBam = document.getElementById('nutBam');
+            
+            nutBam.addEventListener('click', function() {
+                // Thay đổi màu nút ngẫu nhiên khi bấm
+                const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                nutBam.style.backgroundColor = randomColor;
+                
+                // Chuyển đến file firework.html
+                window.location.href = '123.html';
+            });
+        });
+    </script>
+</body>
+</html>
